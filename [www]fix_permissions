@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#echo
+
+arr=$(pwd | tr "/" "\n")
+
+n=2
+a=0
+k=''
+
+for x in ${arr[@]}
+do
+#echo $x;
+if [ $a -gt "$n" ]
+then
+ break;
+fi
+
+k="${k}/${x}"
+a=$(($a+1))
+
+done
+
+k="${k}/htdocs"
+
+#echo $k
+#echo $owner
+#echo $1
+
+chown -R karelian:www-data $k
+find $k -type d -exec chmod 770 {} \;
+#find $k -type f -print | grep -v "/\." | perl -lne 'print quotemeta' | xargs chmod 660

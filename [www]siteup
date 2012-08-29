@@ -1,0 +1,92 @@
+#!/bin/bash
+
+function usage
+{
+  echo "Usage: $0 [-w] sitename"
+}
+
+function make_vhost
+{
+cat <<- _EOF_
+
+<virtualhost *:80>
+      ServerName  $dname
+      ServerAlias *.$dname
+
+      DocumentRoot /var/www/$dname/htdocs
+
+      LogLevel warn
+      ErrorLog  /var/www/$dname/log/error.log
+      CustomLog /var/www/$dname/log/access.log combined
+</virtualhost>
+
+_EOF_
+}
+
+function make_db
+{
+    dbname=`echo $dname | sed 's/[\. -]/_/g'`
+    echo "Creating database [$dbname]"
+    mysql -u root -e "create database $dbname;"
+}
+
+function make_wordpress
+{
+    echo "Installing WordPress..."
+    cd /var/www/$dname/htdocs
+    wget -q http://wordpress.org/latest.zip
+    unzip -qq latest.zip
+    mv wordpress/* .
+    rm -rf wordpress latest.zip
+
+    dbname=`echo $dname | sed 's/[\. -]/_/g'`
+
+    cp wp-config-sample.php wp-config.tmp
+
+    sed -e "s/database_name_here/$dbname/" \
+        -e "s/username_here/root/" \
+        -e "s/password_here//" \
+        wp-config.tmp > wp-config.php
+
+    rm wp-config.tmp
+}
+
+if [ $# -eq 0 ]; then
+  usage
+  exit 1
+fi
+
+dname=$1
+install_wordpress=0
+
+if [ $1 == '-w' ]; then
+  if [ ! $# -eq 2 ]; then
+    usage
+    exit 1
+  fi
+
+  dname=$2
+  install_wordpress=1
+fi
+
+echo "Creating directory structure"
+mkdir -vp /var/www/$dname/htdocs
+mkdir -vp /var/www/$dname/log
+
+echo "Configuring Apache for [$dname]"
+make_vhost > /etc/apache2/sites-available/$dname
+a2ensite $dname
+service apache2 restart
+
+echo "Appending [$dname] to the hosts file"
+echo "127.0.0.1 $dname" >> /etc/hosts
+
+make_db
+
+if [ $install_wordpress == 1 ]; then
+  make_wordpress
+fi
+
+echo "Fixing permissions"
+chown -R www-data:karelian /var/www/$dname
+find /var/www/$dname -type d | xargs chmod 775
