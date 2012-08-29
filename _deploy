@@ -2,7 +2,10 @@
 
 DEBUG=0
 DEPLOY_PATH=/usr/local/bin/
-FILES=`find \`pwd\` -type f -not -iwholename '*.git*' \( ! -iname "_*" ! -iname ".*" ! -iname "*.md" \)`
+FILES=`find \`pwd\` -type f \
+		-not -iwholename '*.git*' \
+		-not -iwholename '*vps*' \
+		\( ! -iname "_*" ! -iname ".*" ! -iname "*.md" \)`
 
 for source in $FILES;
 do
