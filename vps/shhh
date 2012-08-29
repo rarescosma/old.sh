@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# v.1
+#cp ~/dev/silence.php ./index.php
+#chown www-data:www-data index.php
+
+# v.2
+ln -s /usr/local/dev/index.html .
+ln -s /usr/local/dev/robots.txt .
+

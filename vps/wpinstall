@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Process Command Line
+if [ $# -eq 0 ]; then
+        usage
+        exit 1
+fi
+
+cd $1
+
+# Core
+wget --quiet http://wordpress.org/latest.zip
+unzip -q latest.zip
+
+# Plugins
+wget --quiet http://downloads.wordpress.org/plugin/wp-migrate-db.zip;
+unzip -q wp-migrate-db.zip;
+mv wp-migrate-db wordpress/wp-content/plugins/
+
+# Perms & Cleanup
+rm -rf *.zip
+chown -R www-data:www-data $1/wordpress
+mv $1/wordpress/* $1/
+rm -rf $1/wordpress
+
+exit 0

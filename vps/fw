@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ -f '/tmp/fw.lock' ]
+then
+	echo "Firewall down!"
+	iptables -F
+	iptables -X
+	iptables -t nat -F
+	iptables -t nat -X
+	iptables -t mangle -F
+	iptables -t mangle -X
+	iptables -P INPUT ACCEPT
+	iptables -P FORWARD ACCEPT
+	iptables -P OUTPUT ACCEPT
+	rm -rf /tmp/fw.lock
+else
+	echo "Samba Firewall Enabled!"
+	iptables -A INPUT -s \! 127.0.0.1 -p tcp --dport 111 -j REJECT --reject-with tcp-reset
+	iptables -A INPUT -s \! 127.0.0.1 -p tcp --dport 139 -j REJECT --reject-with tcp-reset
+	iptables -A INPUT -s \! 127.0.0.1 -p tcp --dport 445 -j REJECT --reject-with tcp-reset
+	touch /tmp/fw.lock
+fi

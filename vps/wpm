@@ -1,0 +1,368 @@
+<?php
+/*
+WordPress Migration Script
+Author: Rares Cosma
+URL: http://www.rarescosma.com
+Version: 0.8
+*/
+
+// Constants
+define( 'MYNAME', $argv[0] );
+
+// Defaults
+$defaults = array(
+	'from_url'		=> 'http://www.from.example.com',
+	'to_url'		=> 'http://www.to.example.com',
+	'config_file'	=> 'wp-config.php',
+	'db_file'		=> 'db.sql',
+	'zip_file'		=> 'all.zip',
+	'zip_exclude'	=> array(
+		MYNAME,				// Do not include this file
+		'wp-config.php',	// We don't want to overwrite the destination config file
+		'*.sql.bak*',		// Do not include SQL backup files
+		'*.svn*'			// Do not include SVN special files
+	)
+);
+
+// Check CLI
+if( $argc < 2 ) {
+	WPM::usage();
+} else {
+	// Instantiate WPM object
+	$cli = $argv;
+	$wpm = new WPM( $cli, $defaults );
+}
+
+class WPM {
+	private $args;
+
+	private $filename;
+	private $db, $db_string;
+
+	static function usage() {
+		echo 
+"Usage: php " . MYNAME . " [i|e|t|f|h] [filename]
+i    Import database (required db filename)
+e    Export database (optional db filename)
+t    Export database and translate URLs (serialized support / optional db filename)
+f    Export database, translate URLs and pack everything (serialized support / optional zip filename)
+h    Display this message\n";
+		exit;
+	}
+
+	function __construct( $cli = array(), $args = array() ) {
+		// The command line
+		$option = $cli[1];
+		$filename = ( isset( $cli[2] ) ) ? $cli[2] : '';
+
+		// Set arguments
+		$this->args = $args;
+
+		// Implemented command line options
+		$implemented = array( 'i', 'e', 't', 'f', 'h' );
+		if( ! in_array( $option, $implemented ) ) $this->usage();
+
+		// These command line options require an existing db filename
+		$dbfile_req_opt = array( 'i' );
+		if( in_array( $option, $dbfile_req_opt ) ) {
+			if( empty ( $filename ) ) {
+				echo "Please enter a filename.\n\n" ;
+				$this->usage();
+			}
+			if( ! file_exists( $filename ) ) {
+				echo "File does not exist.\n\n" ;
+				$this->usage();
+			} else {
+				$this->args['db_file'] = $filename;
+			}
+		}
+
+		// These command line options take an optional db filename
+		$dbfile_opt = array( 'e', 't' );
+		if( in_array( $option, $dbfile_opt ) ) {
+			if ( ! empty( $filename ) ) $this->args['db_file'] = $filename;
+		}
+
+		// These command line options take an optional zip filename
+		$zipfile_opt = array( 'f' );
+		if( in_array( $option, $zipfile_opt ) ) {
+			if ( ! empty( $filename ) ) $this->args['zip_file'] = $filename;
+		}
+
+		// These command line options require parsing the WP config file
+		$db_req_opt = array( 'i', 'e', 't', 'f' );
+		if( in_array( $option, $db_req_opt ) ) $this->set_db();
+
+		// These command line options require URLs
+		$urls_req_opt = array ( 't', 'f' );
+		if( in_array( $option, $urls_req_opt ) ) $this->set_urls();
+
+		switch ( $option ) {
+			case 'i':
+				// Import DB file
+				$this->import();
+			break;
+
+			case 'e':
+				// Export DB file
+				$this->export();
+			break;
+
+			case 't':
+				// Export & translate serialized
+				$this->export_serialized();
+			break;
+
+			case 'f':
+				// Export, translate serialized and pack
+				$this->export_serialized();
+				$this->pack();
+			break;
+
+			default:
+				// Print usage
+				$this->usage();
+			break;
+		}
+	}
+
+	function import() {
+		$cmd = 'mysql' . $this->db_string . '< ' . $this->args['db_file'];
+		$ret = shell_exec( $cmd );
+
+		if( ! empty( $ret ) ) {
+			echo "SQL error: \n\n" . $ret;
+		}
+	}
+
+	function export() {
+		$cmd = 'mysqldump' . $this->db_string . '> ' . $this->args['db_file'];
+		$ret = shell_exec( $cmd );
+
+		if( ! empty( $ret ) ) {
+			echo "SQL error: \n\n" . $ret;
+		}
+	}
+
+	function pack() {
+		$exclude_string = implode( ' -x ', $this->args['zip_exclude'] );
+		$cmd = 'zip -q -r ' . $this->args['zip_file'] . ' . -x ' . $exclude_string;
+		$ret = shell_exec( $cmd );
+
+		if( ! empty( $ret ) ) {
+			echo "Shell error: \n\n" . $ret;
+		}
+	}
+
+	function export_serialized() {
+		// Export database
+		$this->export();
+
+		// Open filename
+		$filename = $this->args['db_file'];
+		$fp = @fopen( $filename, 'w' );
+		flock( $fp, 2 );
+
+		// Set search and replace arrays
+		$searches = array(
+			$this->args['from_url']
+		);
+
+		$replaces = array(
+			$this->args['to_url']
+		);
+
+		// Get a list of all tables
+		$db = $this->db;
+		$con = mysql_connect( $db['host'], $db['user'], $db['password'] );
+		$tables = mysql_db_query( $db['name'], 'SHOW TABLES', $con );
+
+		// Loop through the tables
+		while( $table = mysql_fetch_array( $tables ) ) {
+			$table = $table[0];
+			$fields = mysql_db_query( $db['name'], 'DESCRIBE ' . $table, $con );
+
+			$columns = array();
+			$index_columns = array();
+
+			while( $field_arr = mysql_fetch_array( $fields ) ) {
+				$columns[] = $field_arr['Field'];
+				if( $field_arr['Key'] == 'PRI' or $field_arr['Key'] == 'MUL' ) $index_columns[] = $field_arr['Field'];
+			}
+
+			// Get the data
+			$data = mysql_db_query( $db['name'], "SELECT * FROM {$table}", $con );
+			while( $row = mysql_fetch_array( $data ) ) {
+				$do_update = false;
+				$update_parts = array();
+
+				foreach( $columns as $column ) {
+					$data_to_fix = $row[$column];
+					$data_fixed = $data_to_fix; // Set equal for now
+
+					// Try to unserialize
+					$unserialized = @unserialize( $data_to_fix );
+					if( 'b:0;' === $data_to_fix || false !== $unserialized ) {
+						$this->recursive_replace( $searches, $replaces, $unserialized );
+						$data_fixed = serialize( $unserialized );
+					} elseif( is_string( $data_to_fix ) ) {
+						$data_fixed = str_replace( $searches, $replaces, $data_to_fix );
+					}
+
+					if( $data_to_fix != $data_fixed ) {
+						$update_parts[] = $column . ' = "' . mysql_real_escape_string( $data_fixed ) . '"';
+						$do_update = true;
+					}
+				}
+
+				if( $do_update ) {
+					// Assemble query
+					// UPDATE parts
+					$sql = "UPDATE {$table} SET " . implode(', ', $update_parts);
+					// Add the WHERE clauses using the primary keys
+					$where_parts = array();
+					foreach( $index_columns as $index_column ) {
+						$where_parts[] = $index_column . ' = "' . $row[$index_column] . '"';
+					}
+					$sql .= ' WHERE ' . implode(' AND ', $where_parts) . "; \n";
+					fwrite( $fp, $sql );
+				}
+			}
+		}
+
+		// Cleanup
+		mysql_close( $con );
+		flock( $fp, 3 );
+		fclose( $fp );
+	}
+
+	function recursive_replace( $searches, $replaces, &$data ) {
+		if (is_array($data)) {
+			foreach( $data as $key => $value ) {
+				if ( is_array( $value ) ) {
+					$this->recursive_replace( $searches, $replaces, $data[$key] );
+				} else {
+					// have to check if it's string to ensure no switching to string for booleans/numbers/nulls - don't need any nasty conversions
+					if( is_string( $value ) ) $data[$key] = str_replace( $searches, $replaces, $value );
+				}
+			}
+		} else {
+			if( is_string( $data ) ) $data = str_replace( $searches, $replaces, $data );
+		}
+	}
+
+	function set_db() {
+		$lines = file( $this->args['config_file'] );
+
+		$lookingfor = array(
+			'DB_NAME',
+			'DB_USER',
+			'DB_PASSWORD',
+			'DB_HOST'
+		);
+
+		$candidates = array();
+
+		foreach( $lines as $line ) {
+			if( strstr( $line, "define('" ) ) {
+				$candidates[] = $line;
+			}
+		}
+
+		$db = array();
+
+		foreach( $candidates as $candidate ) {
+			$parts = explode( "'", $candidate );
+
+			if( in_array($parts[1], $lookingfor ) ) {
+				$var = str_replace( 'db_', '', strtolower( $parts[1] ) );
+				$db[$var] = $parts[3];
+			}
+		}
+
+		$this->db_string = ' -h ' . $db['host'] .  ' -u ' . $db['user'] . ' -p' . $db['password'] . ' ' . $db['name'] . ' ';
+		$this->db = $db;
+	}
+
+	function set_urls() {
+		// Try to get DB params
+		$this->set_db();
+		$db = $this->db;
+
+		// From URL
+		$url = $this->args['from_url'];
+
+		$c = mysql_connect( $db['host'], $db['user'], $db['password'] );
+		if ( $c ) {
+			mysql_select_db( $db['name'] );
+			$q = "SELECT option_value from wp_options where option_name = 'siteurl'";
+			$r = mysql_query( $q );
+			$r = mysql_fetch_assoc( $r );
+			$url = empty( $r['option_value'] ) ? $url : $r['option_value'];
+		}
+		$this->args['from_url'] = $this->readline( 'From URL', $url );
+
+		// To URL
+		$url = $this->args['to_url'];
+		$this->args['to_url'] = $this->readline( 'To URL', $url );
+	}
+
+	function readline( $message, $default ) {
+		echo "${message} [${default}]: ";
+
+		$fp = fopen( 'php://stdin', 'r' );
+		$in = fgets( $fp, 1024 );
+		fclose( $fp );
+
+		$in = trim( $in );
+
+		$in = ( empty( $in ) ) ? $default : $in;
+
+		return $in;
+	}
+
+	/**** Deprecated ****/
+	/*
+	function translate() {
+		$filename = $this->args['db_file'];
+
+		// Make backup
+		$backup = $filename . '.bak'; 
+		$i = 1;
+
+		while( file_exists( $backup ) ) {
+			$backup = $filename . '.bak.' . $i;
+			$i++;
+		}
+
+		$cmd = "cp $filename $backup";
+		shell_exec( $cmd );
+		echo "Backup file: $backup\n";
+
+		// Open the files
+		$lines = file( $backup );
+		$fp = @fopen( $filename, 'w' );
+		flock( $fp, 2 );
+
+		// Set search and replace arrays
+		$searches = array(
+			$this->args['from_url']
+		);
+
+		$replaces = array(
+			$this->args['to_url']
+		);
+
+		// Read through the file
+		foreach( $lines as $line_num => $line ) {
+			$text = str_replace( $searches, $replaces, $line );
+			fwrite( $fp, $text );
+		}
+
+		flock( $fp, 3 );
+		fclose( $fp );
+	}
+	*/
+}
+
+?>

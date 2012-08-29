@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#echo
+
+arr=$(pwd | tr "/" "\n")
+
+n=3
+a=0
+k=''
+
+for x in ${arr[@]}
+do
+#echo $x;
+if [ $a -gt "$n" ]
+then
+ break;
+fi
+
+k="${k}/${x}"
+a=$(($a+1))
+
+done
+
+k="${k}/htdocs"
+owner=`stat -c %U ${k}`
+
+#echo $owner
+#echo $1
+
+chown -R ${owner}:www-data ./$1 
+find ./$1 -type d -exec chmod 770 {} \;
+find ./$1 -type f -exec chmod 660 {} \;
