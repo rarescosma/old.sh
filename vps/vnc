@@ -8,4 +8,5 @@ then
 	vncserver -localhost :1
 else
 	vncserver -kill :1
+	sleep 1 & killall banana
 fi
