@@ -14,9 +14,18 @@ then
 	iptables -P OUTPUT ACCEPT
 	rm -rf /tmp/fw.lock
 else
-	echo "Samba Firewall Enabled!"
-	iptables -A INPUT -s \! 127.0.0.1 -p tcp --dport 111 -j REJECT --reject-with tcp-reset
-	iptables -A INPUT -s \! 127.0.0.1 -p tcp --dport 139 -j REJECT --reject-with tcp-reset
-	iptables -A INPUT -s \! 127.0.0.1 -p tcp --dport 445 -j REJECT --reject-with tcp-reset
-	touch /tmp/fw.lock
+	echo "Firewall Enabled!"
+	
+	# samba
+	iptables -A INPUT \! -s 10.0.0.0/8 -p tcp --dport 111 -j REJECT --reject-with tcp-reset
+	iptables -A INPUT \! -s 10.0.0.0/8 -p tcp --dport 139 -j REJECT --reject-with tcp-reset
+	iptables -A INPUT \! -s 10.0.0.0/8 -p tcp --dport 445 -j REJECT --reject-with tcp-reset
+	
+	# vpn
+	iptables -t nat -A PREROUTING -i venet0:0 -p tcp --dport 1703 -j DNAT --to 10.9.0.10:1703
+	iptables -t nat -A PREROUTING -i venet0 -p tcp --dport 1703 -j DNAT --to 10.9.0.10:1703
+	iptables -t nat -A POSTROUTING -s 10.9.0.0/24 -j SNAT --to-source 188.241.112.77
+	iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -j SNAT --to-source 188.241.112.77	
+
+touch /tmp/fw.lock
 fi
