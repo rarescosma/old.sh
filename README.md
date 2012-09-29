@@ -1,4 +1,4 @@
 sh
 ==
 
-a collection of shell / python / ruby scripts for personal use
+A dusty collection of shell / perl / python / ruby utility scripts.
