@@ -1,3 +1,0 @@
-#!/bin/bash
-cp -f /var/www/virtual/rarescosma.com/htdocs/wpm wpm
-

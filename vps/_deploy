@@ -3,14 +3,11 @@
 DEBUG=0
 DEPLOY_PATH=/usr/local/bin/
 FILES=`find \`pwd\` -type f \
-		-not -iwholename '*.git*' \
-		-not -iwholename '*vps*' \
-		-not -iwholename '*old*' \
 		\( ! -iname "_*" ! -iname ".*" ! -iname "*.md" \)`
 
 for source in $FILES;
 do
-	dest=`echo $DEPLOY_PATH$(basename $source) | sed 's|\[\([^]]*\)\]|\1_|g'`
+	dest=`echo $DEPLOY_PATH$(basename $source) | sed 's/\[\([^]]*\)\]//g'`
 
 	if [[ $DEBUG -eq 1 ]]
 	then
