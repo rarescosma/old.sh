@@ -1,0 +1,11 @@
+#!/bin/bash
+
+pid=`pidof transmission-daemon`;
+
+if [ -z "$pid" ]
+then
+	transmission-daemon -c /var/www/virtual/getbetter.ro/htdocs/candy -g /home/karelian/.config/transmission-daemon -er
+else
+	killall transmission-daemon
+	sleep 1 & killall transmission-daemon >/dev/null 2>/dev/null
+fi
