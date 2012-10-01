@@ -1,2 +1,4 @@
 #!/bin/sh
-/usr/local/bin/pygNotify.py -n "VPS" -t "$1" -p "p" -H 10.9.0.10 -m "$2"
+PREFIX='/usr/local/bin'
+$PREFIX/pygNotify.py -n "VPS" -t "$1" -p "p" -H 10.9.0.10 -m "$2"
+$PREFIX/client_notify.pl 10.9.0.14 "$1" "$2"
