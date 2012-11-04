@@ -1,12 +1,12 @@
 #!/bin/sh
 PREFIX='/usr/local/bin'
 
-# Johnny
-$PREFIX/pygNotify.py -n "VPS" -t "$1" -p "p" -H 10.9.0.10 -m "$2" -P 5
+# Johhny
+ping -c 1 10.9.0.10 > /dev/null && $PREFIX/pygNotify.py -n "VPS" -t "$1" -p "p" -H 10.9.0.10 -m "$2" -P 5
 
 # Darwin
-$PREFIX/client_notify.pl 10.9.0.14 "$1" "$2"
+ping -c 1 10.9.0.14 > /dev/null && $PREFIX/client_notify.pl 10.9.0.14 "$1" "$2"
 
 # Cox
-/usr/bin/gntp-send -a "VPS" -s 10.9.0.22 "$1" "$2"
+ping -c 1 10.9.0.22 > /dev/null && /usr/bin/gntp-send -a "VPS" -s 10.9.0.22 "$1" "$2"
 
