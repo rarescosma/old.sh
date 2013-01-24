@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+
+# tocb.py ("to clipboard(s)")
+
+import sys
+import subprocess
+
+###############################################
+
+def text_to_clipboards(text):
+    # "primary":
+    xsel_proc = subprocess.Popen(['xsel', '-pi'], stdin=subprocess.PIPE)
+    xsel_proc.communicate(text)
+    # "clipboard":
+    xsel_proc = subprocess.Popen(['xsel', '-bi'], stdin=subprocess.PIPE)
+    xsel_proc.communicate(text)
+
+###############################################
+
+stuff = sys.stdin.read()
+text_to_clipboards(stuff)
