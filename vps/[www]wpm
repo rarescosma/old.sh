@@ -9,9 +9,7 @@ Version: 0.8
 
 /**
  * TODO
- * - chainable methods
- * - error handling
- * - handle empty passwords
+ * - better error handling
  */
 
 /**
