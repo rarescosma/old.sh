@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Transmission daemon flip-flop
+# TODO - consider making this into an init.d script
 pid=`pidof transmission-daemon`;
 
 if [ -z "$pid" ]

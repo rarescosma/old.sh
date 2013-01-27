@@ -1,6 +1,8 @@
 #!/bin/sh
 PREFIX='/usr/local/bin'
 
+# Send notifications to connected VPN clients
+
 # Johhny
 ping -c 1 10.9.0.10 > /dev/null && $PREFIX/pygNotify.py -n "VPS" -t "$1" -p "p" -H 10.9.0.10 -m "$2" -P 5
 
