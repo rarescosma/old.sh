@@ -1,4 +1,7 @@
 #!/bin/bash
+DB_USER=''
+DB_PASS=''
+DB_TABLE=''
 
-mysqldump -u autowp -pzxcv1234 --add-drop-table --no-data autowp | grep ^DROP | mysql -uautowp -pzxcv1234 autowp
+mysqldump -u $DB_USER -p $DB_PASS --add-drop-table --no-data $DB_TABLE | grep ^DROP | mysql -u $DB_USER -p $DB_PASS $DB_TABLE
 
