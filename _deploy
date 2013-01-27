@@ -10,6 +10,7 @@ FILES=`find \`pwd\` -type f \
 
 for source in $FILES;
 do
+	# Transform [%tag%]%script_name% to %tag%_%script_name%
 	dest=`echo $DEPLOY_PATH$(basename $source) | sed 's|\[\([^]]*\)\]|\1_|g'`
 
 	if [[ $DEBUG -eq 1 ]]
