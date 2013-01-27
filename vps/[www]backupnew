@@ -2,22 +2,13 @@
 # 
 # VPS to Dropbox Backup Script
 #
-# by Rares Cosma - hello@rarescosma.com
+# by Rares Cosma - rares@getbetter.ro
 # http://www.rarescosma.com
 #
 
 # Config
-BIN_DEPS="curl sed grep tr date p7zip"
-VERSION="0.1"
-
-# Dropbox
-D_LOGIN_EMAIL="office@rarescosma.com"
-
-D_LOGIN_URL="https://www.dropbox.com/login"
-D_HOME_URL="https://www.dropbox.com/home"
-D_UPLOAD_URL="https://dl-web.dropbox.com/upload"
-D_COOKIE_FILE="/tmp/du_cookie_$RANDOM"
-D_RESPONSE_FILE="/tmp/du_resp_$RANDOM"
+BIN_DEPS="curl sed grep tr date p7zip drop"
+VERSION="0.2"
 
 # VPS
 V_EXCLUDED_DOMAINS="/usr/local/dev/excluded.domains"
@@ -33,117 +24,8 @@ usage()
 	echo "Usage: $0 [-b | -m | -d]"
 }
 
-d_remove_temp()
-{
-	rm -rf $D_COOKIE_FILE $D_RESPONSE_FILE $V_BACKUP_LOCK_FILE
-}
-
-d_get_token()
-{
-	TOKEN=$(cat $1 | tr -s '\n' ' ' | sed -n -e 's/.*<form action="'$2'"[^>]*>\s*<input type="hidden" name="t" value="\([a-z 0-9]*\)".*/\1/p')
-	echo $TOKEN
-}
-
-# $1 = filename
-
-### DEPRECATED ###
-d_init()
-{
-	echo "Initializing Dropbox "
-
-	# Load login page
-	echo -n "Loading login page ... "
-
-	curl -s -i -o $D_RESPONSE_FILE "$D_LOGIN_URL"
-
-	if [ $? -ne 0 ]; then
-		d_remove_temp
-		exit 1
-	fi
-
-	echo "[OK]"
-
-	# Get token
-	echo -n "Extracting login token... "
-
-	TOKEN=$(d_get_token "$D_RESPONSE_FILE" "\/login")
-
-	if [ "$TOKEN" == "" ]; then
-		d_remove_temp
-		exit 1
-	fi
-
-	echo "[OK]"
-
-	# Perform login
-	echo -n "Logging in... "
-
-	curl -s -i -c $D_COOKIE_FILE -o $D_RESPONSE_FILE --data "login_email=$D_LOGIN_EMAIL&login_password=$D_LOGIN_PASSWD&t=$TOKEN" "$D_LOGIN_URL"
-	grep "location: /home" $D_RESPONSE_FILE > /dev/null
-
-	if [ $? -ne 0 ]; then
-		d_remove_temp
-		exit 1
-	fi
-
-	echo "[OK]"
-	echo "Dropbox initialized!"
-	echo
-}
-
-### DEPRECATED ###
 d_upload()
 {
-	UPLOAD_FILE=$1
-	DEST_FOLDER=$2
-
-	if [ ! -f $UPLOAD_FILE ]; then
-		echo -e "Error: No such file or directory: $UPLOAD_FILE"
-		d_remove_temp
-		exit 1
-	fi
-
-	echo "Uploading $UPLOAD_FILE to $DEST_FOLDER "
-
-	# Load home page
-	echo -n "Loading home page... "
-
-	curl -s -i -b $D_COOKIE_FILE -o $D_RESPONSE_FILE "$D_HOME_URL"
-
-	if [ $? -ne 0 ]; then
-		d_remove_temp
-		exit 1
-	fi
-
-	echo "[OK]"
-
-	# Get upload token
-	echo -n "Extracting upload token... "
-
-	TOKEN=$(d_get_token "$D_RESPONSE_FILE" "https:\/\/dl-web.dropbox.com\/upload")
-
-	if [ "$TOKEN" == "" ]; then
-		d_remove_temp
-		exit 1
-	fi
-
-	echo "[OK]"
-
-	# Upload
-	echo -n "Uploading... "
-	curl -s -i -b $D_COOKIE_FILE -o $D_RESPONSE_FILE -F "plain=yes" -F "dest=$DEST_FOLDER" -F "t=$TOKEN" -F "file=@$UPLOAD_FILE"  "$D_UPLOAD_URL"
-	grep "HTTP/1.1 302 FOUND" $D_RESPONSE_FILE > /dev/null
-
-	if [ $? -ne 0 ]; then
-		d_remove_temp
-		exit 1
-	fi
-
-	echo "[OK]"
-	echo
-}
-
-d_upload_two() {
 	UPLOAD_FILE=$1
 	UPLOAD_DIR=$2
 	
@@ -210,7 +92,7 @@ m_drop()
 		DEST_PATH=Devices/VPS/${domain}/${WDAY};
 
 		for j in `find $i -type f`; do
-			d_upload_two $j $DEST_PATH/$(basename $j)
+			d_upload $j $DEST_PATH/$(basename $j)
 		done
 		echo "Uploaded ${domain}";
 	done
