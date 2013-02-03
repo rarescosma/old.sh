@@ -6,6 +6,9 @@
 # http://www.rarescosma.com
 #
 
+# Path
+export PATH=$PATH:/usr/local/bin
+
 # Config
 BIN_DEPS="curl sed grep tr date p7zip drop"
 VERSION="0.2"
@@ -89,7 +92,7 @@ m_drop()
 
 	for i in ${V_BACKUP_PATH}*; do
 		domain=${i:${#V_BACKUP_PATH}:${#i}};
-		DEST_PATH=Devices/VPS/${domain}/${WDAY};
+		DEST_PATH=Dev/VPS/${domain}/${WDAY};
 
 		for j in `find $i -type f`; do
 			d_upload $j $DEST_PATH/$(basename $j)
@@ -133,7 +136,6 @@ while [ "$1" != "" ]; do
 			usage
 			exit;;
 		* )
-			usage
 			exit 1
 	esac
 	shift
