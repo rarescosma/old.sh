@@ -18,31 +18,25 @@ Version: 0.8
 define( 'MYNAME', $argv[0] );
 
 /**
- * Defaults
+ * CLI
+ *
+ * --file = the database filename or the zip filename
+ * --from_url = the URL you're translating from
+ * --to_url = the URL you're translating to
  */
-$defaults = array(
-	'from_url'      => 'www.from.example.com',
-	'to_url'        => 'www.to.example.com',
-	'config_file'   => 'wp-config.php',
-	'abspath' 		=> '/usr/local/bin/',
-	'db_file'       => 'db.sql',
-	'zip_file'      => 'all.zip',
-	'zip_exclude'   => array(
-		MYNAME,             /* Do not include this file */
-		'wp-config.php',    /* We don't want to overwrite the destination config file */
-		'*.sql.bak*',       /* Do not include SQL backup files */
-		'*.svn*',           /* Do not include SVN special files */
-		'*.git*'            /* Skip Git stuff */
-	)
-);
 
 /* Check CLI */
 if( $argc < 2 ) {
 	WPM::usage();
 } else {
 	/* Instantiate WPM object */
-	$cli = $argv;
-	$wpm = new WPM( $cli, $defaults );
+	$options = getopt( '', array('action:', 'file:', 'from_url:', 'to_url:' ) );
+
+	/* Bail if action isn't set */
+	if( ! isset( $options['action'] ) )
+		WPM::usage();
+
+	$wpm = new WPM( $options );
 }
 
 class WPM {
@@ -59,14 +53,32 @@ class WPM {
 	 */
 	static function usage() {
 		echo
-"Usage: php " . MYNAME . " [i|e|t|f|h] [filename]
+"Usage: php " . MYNAME . " --action [i|e|t|f|h] [--file filename] [--from_url url1] [--to_url url2]
 i    Import database (required db filename)
 e    Export database (optional db filename)
 t    Export database and translate URLs (serialized support / optional db filename)
 f    Export database, translate URLs and pack everything (serialized support / optional zip filename)
+u    Import, export and translate, then import again (update)
 h    Display this message\n";
 		exit;
 	}
+
+	private $defaults = array(
+		'from_url'      => 'www.from.example.com',
+		'to_url'        => 'www.to.example.com',
+		'config_file'   => 'wp-config.php',
+		'abspath' 		=> '/usr/local/bin/',
+		'db_file'       => 'db.sql',
+		'zip_file'      => 'all.zip',
+		'zip_exclude'   => array(
+			MYNAME,             /* Do not include this file */
+			'wp-config.php',    /* We don't want to overwrite the destination config file */
+			'*.sql.bak*',       /* Do not include SQL backup files */
+			'*.svn*',           /* Do not include SVN special files */
+			'*.git*'            /* Skip Git stuff */
+		)
+	);
+
 
 	/**
 	 * Parses the command line, calls the appropiate setters and dispatches
@@ -75,24 +87,22 @@ h    Display this message\n";
 	 * @param array $cli  Command line parameters, usually from $argv
 	 * @param array $args Default parameters
 	 */
-	function __construct( $cli = array(), $args = array() ) {
+	function __construct( $options = array() ) {
+		$this->args = $this->defaults;
+
 		/* The command line */
-		$option = $cli[1];
-		$filename = ( isset( $cli[2] ) ) ? $cli[2] : '';
-
-		/* Set CLI */
-		$this->cli = $cli;
-
-		/* Set arguments */
-		$this->args = $args;
+		$action = $options['action'];
+		$filename = isset( $options['file'] ) ? $options['file'] : '';
+		$from_url = isset( $options['from_url'] ) ? $options['from_url'] : '';
+		$to_url = isset( $options['to_url'] ) ? $options['to_url'] : '';
 
 		/* Implemented command line options */
-		$implemented = array( 'i', 'e', 't', 'f', 'h' );
-		if( ! in_array( $option, $implemented ) ) $this->usage();
+		$implemented = array( 'i', 'e', 't', 'f', 'h', 'u' );
+		if( ! in_array( $action, $implemented ) ) $this->usage();
 
 		/* These command line options require an existing db filename */
-		$dbfile_req_opt = array( 'i' );
-		if( in_array( $option, $dbfile_req_opt ) ) {
+		$dbfile_req_opt = array( 'i', 'u' );
+		if( in_array( $action, $dbfile_req_opt ) ) {
 			if( empty ( $filename ) ) {
 				echo "Please enter a filename.\n\n" ;
 				$this->usage();
@@ -107,25 +117,25 @@ h    Display this message\n";
 
 		/* These command line options take an optional db filename */
 		$dbfile_opt = array( 'e', 't' );
-		if( in_array( $option, $dbfile_opt ) ) {
+		if( in_array( $action, $dbfile_opt ) ) {
 			if ( ! empty( $filename ) ) $this->args['db_file'] = $filename;
 		}
 
 		/* These command line options take an optional zip filename */
 		$zipfile_opt = array( 'f' );
-		if( in_array( $option, $zipfile_opt ) ) {
+		if( in_array( $action, $zipfile_opt ) ) {
 			if ( ! empty( $filename ) ) $this->args['zip_file'] = $filename;
 		}
 
 		/* These command line options require parsing the WP config file */
-		$db_req_opt = array( 'i', 'e', 't', 'f' );
-		if( in_array( $option, $db_req_opt ) ) $this->set_db();
+		$db_req_opt = array( 'i', 'e', 't', 'f', 'u' );
+		if( in_array( $action, $db_req_opt ) ) $this->set_db();
 
 		/* These command line options require URLs */
-		$urls_req_opt = array ( 't', 'f' );
-		if( in_array( $option, $urls_req_opt ) ) $this->set_urls();
+		$urls_req_opt = array ( 't', 'f', 'u' );
+		if( in_array( $action, $urls_req_opt ) ) $this->set_urls( $from_url, $to_url );
 
-		switch ( $option ) {
+		switch ( $action ) {
 			case 'i':
 				/* Import DB file */
 				$this->import();
@@ -147,10 +157,18 @@ h    Display this message\n";
 			break;
 
 			case 'u':
-				/* Import, export translated and import back */
-				$this->import()->export()->update_serialized();
-				
+				/**
+				 * HACK!
+				 * Import, export translated and import back
+				 */
 				$this->import();
+				$tmp = $this->args['db_file'];
+				$this->args['db_file'] = 'tmp.sql';
+				$this->export()->update_serialized();
+				$this->import();
+				@unlink( 'tmp.sql' );
+			break;
+
 			default:
 				/* Print usage */
 				$this->usage();
@@ -164,7 +182,11 @@ h    Display this message\n";
 	 * @return void
 	 */
 	private function import() {
-		$cmd = 'mysql' . $this->db_string . '< ' . $this->args['db_file'];
+
+		$db_file = $this->args['db_file'];
+		echo "Importing from ${db_file}\n";
+
+		$cmd = 'mysql' . $this->db_string . '< ' . $db_file;
 		$ret = shell_exec( $cmd );
 
 		if( ! empty( $ret ) ) {
@@ -180,7 +202,11 @@ h    Display this message\n";
 	 * @return void
 	 */
 	private function export() {
-		$cmd = 'mysqldump' . $this->db_string . '> ' . $this->args['db_file'];
+
+		$db_file = $this->args['db_file'];
+		echo "Exporting to ${db_file}\n";
+
+		$cmd = 'mysqldump' . $this->db_string . '> ' . $db_file;
 		$ret = shell_exec( $cmd );
 
 		if( ! empty( $ret ) ) {
@@ -216,8 +242,13 @@ h    Display this message\n";
 	 */
 	private function update_serialized() {
 
-		/* Open filename */
+		$from_url = $this->args['from_url'];
+		$to_url = $this->args['to_url'];
 		$filename = $this->args['db_file'];
+
+		echo "Appending updates from ${from_url} to ${to_url}. Filename: ${filename}\n";
+
+		/* Open filename */
 		$fp = @fopen( $filename, 'a' );
 		flock( $fp, 2 );
 
@@ -377,38 +408,49 @@ h    Display this message\n";
 	 *
 	 * @return void
 	 */
-	private function set_urls() {
-		/* Try to get DB params */
-		if( !is_array( $this->db ) )
-			$this->set_db();
-
-		$db = $this->db;
+	private function set_urls( $from_url = '', $to_url = '' ) {
 
 		/* From URL */
-		$url = $this->args['from_url'];
+		if( ! empty( $from_url ) ) {
+			$this->args['from_url'] = $from_url;
+		} else {
 
-		/* Table prefix */
-		$prefix = $this->db['table_prefix'];
+			/* Try to get DB params */
+			if( !is_array( $this->db ) )
+				$this->set_db();
 
-		$c = mysql_connect( $db['host'], $db['user'], $db['password'] );
-		if ( $c ) {
-			mysql_select_db( $db['name'] );
-			$q = "SELECT option_value from ${prefix}options where option_name = 'siteurl'";
-			$r = mysql_query( $q );
-			$r = mysql_fetch_assoc( $r );
-			$url = empty( $r['option_value'] ) ? $url : $r['option_value'];
+			$db = $this->db;
 
-			/* Trim protocol */
-			$url = str_replace( array( 'http://', 'https://' ), '', $url );
+			/* From URL */
+			$url = $this->args['from_url'];
 
-			/* Trim ending slash */
-			$url = rtrim( $url, '/' );
+			/* Table prefix */
+			$prefix = $this->db['table_prefix'];
+
+			$c = mysql_connect( $db['host'], $db['user'], $db['password'] );
+			if ( $c ) {
+				mysql_select_db( $db['name'] );
+				$q = "SELECT option_value from ${prefix}options where option_name = 'siteurl'";
+				$r = mysql_query( $q );
+				$r = mysql_fetch_assoc( $r );
+				$url = empty( $r['option_value'] ) ? $url : $r['option_value'];
+
+				/* Trim protocol */
+				$url = str_replace( array( 'http://', 'https://' ), '', $url );
+
+				/* Trim ending slash */
+				$url = rtrim( $url, '/' );
+			}
+			$this->args['from_url'] = $this->readline( 'From URL', $url );
 		}
-		$this->args['from_url'] = $this->readline( 'From URL', $url );
 
 		/* To URL */
-		$url = $this->args['to_url'];
-		$this->args['to_url'] = $this->readline( 'To URL', $url );
+		if( ! empty( $to_url ) ) {
+			$this->args['to_url'] = $to_url;
+		} else {
+			$url = $this->args['to_url'];
+			$this->args['to_url'] = $this->readline( 'To URL', $url );
+		}
 
 		/* Chain */
 		return $this;
