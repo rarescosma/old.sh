@@ -46,6 +46,8 @@ if( $argc < 2 ) {
 }
 
 class WPM {
+
+	private $cli;
 	private $args;
 
 	private $filename;
@@ -77,6 +79,9 @@ h    Display this message\n";
 		/* The command line */
 		$option = $cli[1];
 		$filename = ( isset( $cli[2] ) ) ? $cli[2] : '';
+
+		/* Set CLI */
+		$this->cli = $cli;
 
 		/* Set arguments */
 		$this->args = $args;
@@ -141,6 +146,11 @@ h    Display this message\n";
 				$this->export()->update_serialized()->pack();
 			break;
 
+			case 'u':
+				/* Import, export translated and import back */
+				$this->import()->export()->update_serialized();
+				
+				$this->import();
 			default:
 				/* Print usage */
 				$this->usage();
