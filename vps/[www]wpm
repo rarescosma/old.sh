@@ -92,6 +92,7 @@ h    Display this message\n";
 
 		/* The command line */
 		$action = $options['action'];
+		$this->args['action'] = $action;
 		$filename = isset( $options['file'] ) ? $options['file'] : '';
 		$from_url = isset( $options['from_url'] ) ? $options['from_url'] : '';
 		$to_url = isset( $options['to_url'] ) ? $options['to_url'] : '';
@@ -162,10 +163,17 @@ h    Display this message\n";
 				 * Import, export translated and import back
 				 */
 				$this->import();
+
+				/** Hijack the db_file and call set_urls() again */
 				$tmp = $this->args['db_file'];
 				$this->args['db_file'] = 'tmp.sql';
+				$this->set_urls( $from_url, $to_url );
+
+				/* Resume the chain */
 				$this->export()->update_serialized();
 				$this->import();
+
+				/* Remove the temporary file */
 				@unlink( 'tmp.sql' );
 			break;
 
@@ -441,7 +449,12 @@ h    Display this message\n";
 				/* Trim ending slash */
 				$url = rtrim( $url, '/' );
 			}
-			$this->args['from_url'] = $this->readline( 'From URL', $url );
+
+			if( 'u' == $this->args['action'] ) {
+				$this->args['from_url'] = $url;
+			} else {
+				$this->args['from_url'] = $this->readline( 'From URL', $url );
+			}
 		}
 
 		/* To URL */
