@@ -2,5 +2,6 @@
 
 chown -R karelian:www-data ./ 
 find ./ -type d -exec chmod 770 {} \;
-find ./ -type f -exec chmod 660 {} \;
-#find $k -type f -print | grep -v "/\." | perl -lne 'print quotemeta' | xargs chmod 660
+find ./ -type f ! -executable -exec chmod 660 {} \;
+find ./ -type f -executable -exec chmod 770 {} \;
+
