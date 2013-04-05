@@ -76,7 +76,7 @@ mkdir -vp /var/www/$dname/log
 echo "Configuring Apache for [$dname]"
 make_vhost > /etc/apache2/sites-available/$dname
 a2ensite $dname
-service apache2 restart
+sudo service apache2 restart
 
 echo "Appending [$dname] to the hosts file"
 echo "127.0.0.1 $dname" >> /etc/hosts
@@ -88,5 +88,5 @@ if [ $install_wordpress == 1 ]; then
 fi
 
 echo "Fixing permissions"
-chown -R www-data:karelian /var/www/$dname
+chown -R karelian:www-data /var/www/$dname
 find /var/www/$dname -type d | xargs chmod 775
