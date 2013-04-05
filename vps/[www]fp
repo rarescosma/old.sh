@@ -1,7 +1,6 @@
 #!/bin/bash
 
-#echo
-
+# Find the root htdocs dir
 arr=$(pwd | tr "/" "\n")
 
 n=3
@@ -10,7 +9,6 @@ k=''
 
 for x in ${arr[@]}
 do
-#echo $x;
 if [ $a -gt "$n" ]
 then
  break;
@@ -22,11 +20,11 @@ a=$(($a+1))
 done
 
 k="${k}/htdocs"
+
+# Establish the owner
 owner=`stat -c %U ${k}`
 
-#echo $owner
-#echo $1
-
-chown -R ${owner}:www-data ./$1 
-find ./$1 -type d -exec chmod 770 {} \;
-find ./$1 -type f -exec chmod 660 {} \;
+chown -R ${owner}:www-data $k 
+find $k -type d -exec chmod 770 {} \;
+find $k -type f \! -executable -exec chmod 660 {} \;
+find $k -type f -executable -exec chmod 770 {} \;

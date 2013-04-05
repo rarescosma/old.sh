@@ -23,11 +23,10 @@ else
 	iptables -A INPUT \! -s 10.0.0.0/8 -p tcp --dport 445 -j REJECT --reject-with tcp-reset
 	
 	# vpn
-	#iptables -t nat -A PREROUTING -i venet0 -p tcp --dport 1703 -j DNAT --to 10.9.0.10:1703
-
 	iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 	iptables -A FORWARD -s 10.9.0.0/24 -j ACCEPT     
-	iptables -t nat -A POSTROUTING -o venet0 -j SNAT --to-source 188.241.112.77 
+	iptables -A FORWARD -s 10.8.0.0/24 -j ACCEPT     
+	iptables -t nat -A POSTROUTING -o venet0 -j SNAT --to-source 89.32.146.88 
 
 	touch /tmp/fw.lock
 fi

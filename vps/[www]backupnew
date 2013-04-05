@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# VPS to Dropbox Backup Script
+# VPS to Dropbox/AeroFS Backup Script
 #
 # by Rares Cosma - rares@getbetter.ro
 # http://www.rarescosma.com
@@ -10,8 +10,8 @@
 export PATH=$PATH:/usr/local/bin
 
 # Config
-BIN_DEPS="curl sed grep tr date p7zip drop"
-VERSION="0.2"
+BIN_DEPS="curl sed grep tr date p7zip drop aerofs-cli"
+VERSION="0.4"
 
 # VPS
 V_EXCLUDED_DOMAINS="/usr/local/dev/excluded.domains"
@@ -97,8 +97,30 @@ m_drop()
 		for j in `find $i -type f`; do
 			d_upload $j $DEST_PATH/$(basename $j)
 		done
-		echo "Uploaded ${domain}";
+		echo "Uploaded ${domain} to Dropbox";
 	done
+}
+
+
+m_aero()
+{
+        # Get the weekday
+        WDAY=`date +%u | tr -d "\n"`
+
+        for i in ${V_BACKUP_PATH}*; do
+                domain=${i:${#V_BACKUP_PATH}:${#i}};
+                DEST_PATH=/home/karelian/AeroFS/VPS/${domain}/${WDAY};
+
+		mkdir -p $DEST_PATH
+
+                for j in `find $i -type f`; do
+			cp $j $DEST_PATH/$(basename $j)
+                done
+
+                echo "Uploaded ${domain} to AeroFS";
+        done
+
+	chown -R karelian:karelian /home/karelian/AeroFS/VPS
 }
 	
 # Check Dependencies
@@ -123,7 +145,8 @@ while [ "$1" != "" ]; do
 			echo `date` 
 			m_backup
 			m_move
-			m_drop;;
+			m_aero;;
+			#m_drop;;
 		-z | --zip )
 			m_zip;;
 		-b | --backup )
@@ -132,6 +155,8 @@ while [ "$1" != "" ]; do
 			m_move;;
 		-d | --drop )
 			m_drop;;
+		--aero )
+			m_aero;;
 		-h | --help )
 			usage
 			exit;;
