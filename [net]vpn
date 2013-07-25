@@ -1,0 +1,50 @@
+#!/bin/bash
+
+PUBLIC='eth0'
+TUNNEL='tun0'
+TUNNEL_MASK='255.0.0.0'
+
+function get_ip() {
+  /sbin/ifconfig $1 | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}'
+}
+
+function get_subnet() {
+  ip=$1
+  nm=$2
+   
+  ip4="${ip##*.}" ; x="${ip%.*}" 
+  ip3="${x##*.}" ; x="${x%.*}"
+  ip2="${x##*.}" ; x="${x%.*}"
+  ip1="${x##*.}"   
+  
+  nm4="${nm##*.}" ; x="${nm%.*}"
+  nm3="${x##*.}" ; x="${x%.*}"
+  nm2="${x##*.}" ; x="${x%.*}"
+  nm1="${x##*.}"
+  
+  let sn1="$ip1&$nm1" 
+  let sn2="$ip2&$nm2"
+  let sn3="$ip3&$nm3"
+  let sn4="$ip1&$nm4"
+  
+  subnet=$sn1.$sn2.$sn3.$sn4 
+  
+  echo $subnet/$nm
+}
+
+PUBLIC_IP=`get_ip $PUBLIC`
+TUNNEL_IP=`get_ip $TUNNEL`
+TUNNEL_SUBNET=`get_subnet $TUNNEL_IP $TUNNEL_MASK`
+
+
+# Make sure we can NAT
+sudo modprobe iptable_nat
+
+# Enable forwarding
+echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
+
+# Source NAT vpn packets
+sudo iptables -t nat -A POSTROUTING -s $TUNNEL_SUBNET -j SNAT --to-source $PUBILC_IP 
+
+# Restart OpenVPN
+sudo service openvpn restart
