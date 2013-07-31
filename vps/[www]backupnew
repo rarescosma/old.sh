@@ -10,7 +10,7 @@
 export PATH=$PATH:/usr/local/bin
 
 # Config
-BIN_DEPS="curl sed grep tr date p7zip drop aerofs-cli"
+BIN_DEPS="curl sed grep tr date p7zip drop"
 VERSION="0.4"
 
 # VPS
@@ -145,8 +145,7 @@ while [ "$1" != "" ]; do
 			echo `date` 
 			m_backup
 			m_move
-			m_aero;;
-			#m_drop;;
+			m_drop;;
 		-z | --zip )
 			m_zip;;
 		-b | --backup )
