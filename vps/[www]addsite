@@ -1,0 +1,35 @@
+#!/bin/bash
+
+function usage
+{
+  echo "Usage: $0 sitename"
+}
+
+function make_vhost
+{
+cat <<- _EOF_
+
+<virtualhost *:80>
+      ServerName  $dname
+      ServerAlias www.$dname
+
+      DocumentRoot /var/www/virtual/$dname/htdocs
+
+      LogLevel warn
+      ErrorLog  /var/www/virtual/$dname/logs/error.log
+      CustomLog /var/www/virtual/$dname/logs/access.log combined
+</virtualhost>
+
+_EOF_
+}
+
+if [[ $# != 1 ]]; then
+  usage
+  exit 1
+fi
+
+dname=$1
+
+echo "Configuring Apache for [$dname]"
+make_vhost > /etc/apache2/sites-available/$dname
+a2ensite $dname

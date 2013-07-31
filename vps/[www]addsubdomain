@@ -1,0 +1,34 @@
+#!/bin/bash
+
+function usage
+{
+  echo "Usage: $0 sitename subdomain"
+}
+
+function append_vhost
+{
+cat <<- _EOF_
+
+<virtualhost *:80>
+      ServerName  $sname.$dname
+
+      DocumentRoot /var/www/virtual/$dname/$sname/htdocs
+
+      LogLevel warn
+      ErrorLog  /var/www/virtual/$dname/$sname/logs/error.log
+      CustomLog /var/www/virtual/$dname/$sname/logs/access.log combined
+</virtualhost>
+
+_EOF_
+}
+
+if [[ $# != 2 ]]; then
+  usage
+  exit 1
+fi
+
+dname=$1
+sname=$2
+
+echo "Configuring Apache for [$sname _DOT_ $dname]"
+append_vhost >> /etc/apache2/sites-available/$dname
