@@ -1,7 +1,13 @@
 #!/bin/bash
 
-chown -R karelian:www-data ./ 
+if [ $# == 1 ]
+then
+	owner=$1
+else
+	owner='karelian:www-data'
+fi
+
+chown -R $owner ./
 find ./ -type d -exec chmod 770 {} \;
 find ./ -type f ! -executable -exec chmod 660 {} \;
 find ./ -type f -executable -exec chmod 770 {} \;
-
