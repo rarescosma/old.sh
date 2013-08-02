@@ -59,6 +59,7 @@ e    Export database (optional db filename)
 t    Export database and translate URLs (serialized support / optional db filename)
 f    Export database, translate URLs and pack everything (serialized support / optional zip filename)
 u    Import, export and translate, then import again (update)
+l    List database credentials from wp-config
 h    Display this message\n";
 		exit;
 	}
@@ -98,7 +99,7 @@ h    Display this message\n";
 		$to_url = isset( $options['to_url'] ) ? $options['to_url'] : '';
 
 		/* Implemented command line options */
-		$implemented = array( 'i', 'e', 't', 'f', 'h', 'u' );
+		$implemented = array( 'i', 'e', 't', 'f', 'h', 'u', 'l' );
 		if( ! in_array( $action, $implemented ) ) $this->usage();
 
 		/* These command line options require an existing db filename */
@@ -129,7 +130,7 @@ h    Display this message\n";
 		}
 
 		/* These command line options require parsing the WP config file */
-		$db_req_opt = array( 'i', 'e', 't', 'f', 'u' );
+		$db_req_opt = array( 'i', 'e', 't', 'f', 'u', 'l' );
 		if( in_array( $action, $db_req_opt ) ) $this->set_db();
 
 		/* These command line options require URLs */
@@ -175,6 +176,13 @@ h    Display this message\n";
 
 				/* Remove the temporary file */
 				@unlink( 'tmp.sql' );
+			break;
+
+			case 'l':
+				/**
+				 * List credentials
+				 */
+				print_r( $this->db );
 			break;
 
 			default:
