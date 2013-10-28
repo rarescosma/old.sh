@@ -47,6 +47,14 @@ COMMIT
 -A INPUT -p tcp --dport 21379 -j ACCEPT
 -A INPUT -p udp --dport 21379 -j ACCEPT
 
+# Allows Transmission 
+-A INPUT -p udp --dport 62317 -j ACCEPT
+-A INPUT -p tcp --dport 62317 -j ACCEPT
+
+# Allows Rainy
+-A INPUT -p udp --dport 62318 -j ACCEPT
+-A INPUT -p tcp --dport 62318 -j ACCEPT
+
 # Allows POP (and SSL-POP)
 #-A INPUT -p tcp --dport 110 -j ACCEPT
 #-A INPUT -p tcp --dport 995 -j ACCEPT
