@@ -1,0 +1,3 @@
+#!/bin/bash
+
+somagic-capture -p --iso-transfers=20 --sync=2 --luminance=2 | mplayer -vf yadif -demuxer rawvideo -rawvideo "pal:format=uyvy:fps=25" -aspect 16:9 -
