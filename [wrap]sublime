@@ -1,3 +1,3 @@
-#!/bin/bash
-/home/karelian/Dropbox/Apps/Sublime/sublime_text -a "$@" &
+#!/usr/bin/env bash
+$HOME/_/drop/Apps/Sublime3/sublime_text -a "$@" &
 
