@@ -1,14 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 DEBUG=0
-DEPLOY_PATH=/usr/local/bin/
+DEPLOY_PATH=~/_/bin/
 FILES=`find \`pwd\` -type f \
+		-not -iwholename '*.git*' \
+		-not -iwholename '*vps*' \
+		-not -iwholename '*old*' \
 		\( ! -iname "_*" ! -iname ".*" ! -iname "*.md" \)`
 
 for source in $FILES;
 do
 	# Transform [%tag%]%script_name% to %tag%_%script_name%
-	dest=`echo $DEPLOY_PATH$(basename $source) | sed 's/\[\([^]]*\)\]//g'`
+	dest=`echo $DEPLOY_PATH$(basename $source) | sed 's|\[\([^]]*\)\]|\1_|g'`
 
 	if [[ $DEBUG -eq 1 ]]
 	then
