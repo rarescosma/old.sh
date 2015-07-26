@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
 
 wmctrl -s 3
+
+if [[ $# -gt 0 ]] ; then
+	exo-open "$@"
+fi
