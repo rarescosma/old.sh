@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${HOME}/.sublime/sublime_text
+${HOME}/.sublime/sublime_text --add "$@"
 
