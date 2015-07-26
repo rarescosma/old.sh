@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+sudo service nginx stop
+sudo service php5-fpm stop
+sudo service hhvm stop
+sudo service mysql stop
+sudo service supervisor stop
+sudo service memcached stop
+sudo service redis-server stop
+sudo service mongod stop
