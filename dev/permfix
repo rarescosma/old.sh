@@ -3,7 +3,7 @@
 DIR_PERMS="770"
 SCRIPT_PERMS="770"
 FILE_PERMS="660"
-OWNER="karelian:www-data"
+OWNER="`whoami`:www-data"
 
 chown -R $OWNER ./
 find ./ -type d -exec chmod $DIR_PERMS {} \;
