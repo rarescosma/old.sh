@@ -1,4 +1,4 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 # Captures a screenshot with shutter and saves it in $SCREENSHOT_PATH
 # To avoid colisions the filename is suffixed with a pseudo-random
