@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Snaps the current window to the right edge of the screen
+
+wmctrl -r :ACTIVE: -e 0,960,0,960,1036
+wmctrl -r :ACTIVE: -b add,maximized_vert

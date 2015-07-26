@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+import codecs
+import re
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-c", "--cue", dest="cue")
+parser.add_option("-s", "--song", dest="song")
+(o, args) = parser.parse_args()
+
+def read(cFile):
+    """ Reads and returns a file contents as a single string """
+    with codecs.open(cFile, 'r', 'utf-8') as f:
+        contents = f.read()
+        f.close()
+        return contents
+
+if o.cue and o.song:
+    num_match = re.search('([0-9]+)', o.song)
+    if num_match.group(0):
+        cue = read(o.cue)
+        title_match = re.search('TRACK ' + num_match.group(0) + ' [A-Z\s\n]+TITLE "(.+)"', cue, re.MULTILINE)
+        dest = "%s.%s.flac" % (num_match.group(0), title_match.group(1))
+        print dest.replace(' ', '_')

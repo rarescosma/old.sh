@@ -1,0 +1,9 @@
+#/usr/bin/env bash
+
+# Captures a screenshot with shutter and saves it in $SCREENSHOT_PATH
+# To avoid colisions the filename is suffixed with a pseudo-random
+# hex string from openssl.
+
+SCREENSHOT_PATH="${HOME}/.cloudy"
+
+shutter -s -o "${SCREENSHOT_PATH}/%y%m%d_%T_$(openssl rand -hex 16).png"

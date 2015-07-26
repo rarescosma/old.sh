@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+wmctrl -s 1
+
+COMMAND='urxvt'
+RUNNING=`ps --no-headers -C${COMMAND} | wc -l`
+
+if [[ ${RUNNING} -lt 1 || $# == 1 && "x$1" == "x--new" ]] ; then
+	urxvt & pid=$!
+	wid=`sleep 0.2; wmctrl -l -p | grep $pid | cut -d" " -f1`
+	wmctrl -i -r $wid -b toggle,fullscreen
+fi

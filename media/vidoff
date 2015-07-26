@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Restarts the screensaver, redshift and disables the equalizer
+
+xscreensaver
+redshift &
+pulseaudio-equalizer disable

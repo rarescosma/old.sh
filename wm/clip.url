@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Passes the clipboard contents to chrome to open in a new tab
+# Good with URLs
+
+wmctrl -s 0
+exec google-chrome $(xclip -out -selection clipboard)

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Used with a git alias and a custom grc file to highlight notes in git repos
+# e.g. alias gitn="git ls-files | xargs notes | awk -F: '{ print \$1,\$2; print \$3,\$4; print \$5}' | grcat conf.notes"
+
+if [[ -z $PATTERN ]]; then
+	  PATTERN='TODO|HACK|FIXME|OPTIMIZE'
+fi
+
+gawk 'match($0, /^.*('$PATTERN'):?\s?(.*)$/, ary) {print FILENAME":"FNR":"ary[1]":"ary[2]}' $@

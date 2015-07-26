@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+wmctrl -s 2
+
+COMMAND='sublime_text'
+RUNNING=`ps --no-headers -C${COMMAND} | wc -l`
+
+RUN="exec /home/karelian/.sublime/sublime_text"
+if [[ ${RUNNING} -lt 1 ]] ; then
+	$RUN
+fi

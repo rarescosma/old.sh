@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Unlock the ssh key at startup
+
+export SSH_ASKPASS=/usr/bin/ssh-askpass
+/usr/bin/ssh-add

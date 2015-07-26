@@ -1,0 +1,11 @@
+#!/bin/bash
+
+DIR_PERMS="770"
+SCRIPT_PERMS="770"
+FILE_PERMS="660"
+OWNER="karelian:www-data"
+
+chown -R $OWNER ./
+find ./ -type d -exec chmod $DIR_PERMS {} \;
+find ./ -type f -executable -exec chmod $SCRIPT_PERMS {} \;
+find ./ -type f ! -executable -exec chmod $FILE_PERMS {} \;

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+find $1 -type f -size +10M -printf "%s %p\n" | \
+	while read -r line; do echo "$line" | \
+		awk "{ORS = \"\"; CONVFMT = \"%2.2f\"; split(\"B KB MB GB TB PB\",type); for(i=5;y < 1;i--) { y = \$1 / (2**(10*i)) } \$1 = \"\"; printf(\"%2.2f%s%s\n\", y, type[i+2], \$0);}"; \
+	done | sort -h

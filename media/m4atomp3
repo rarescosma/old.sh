@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Converts all m4a files in the current folder to mp3
+
+BITRATE="192k"
+
+find . -type f -print0 | \
+	while read -d $'\0' file; do z=`basename $file`; \
+		< /dev/null ffmpeg -loglevel verbose -y -i "$z" -acodec libmp3lame -ac 2 -ab ${BITRATE} "${z%.*}.mp3"; \
+	done

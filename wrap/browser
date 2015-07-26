@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+wmctrl -s 0
+
+COMMAND='chrome'
+RUNNING=`ps --no-headers -C${COMMAND} | wc -l`
+
+if [[ ${RUNNING} -lt 1 || $# == 1 && "x$1" == "x--new" ]] ; then
+	exec google-chrome --disable-gpu
+	#exec exo-open --launch WebBrowser
+fi

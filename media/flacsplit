@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+CUE=$1
+FLAC=$2
+CUE_TITLE="${HOME}/_/my/sh/media/cuetitle"
+
+cuebreakpoints "$1" | shnsplit -o flac "$2"
+
+for src in `find ./ -type f -name "*track*flac"`; do
+	dest=`${CUE_TITLE} -c "$1" -s "$src"`
+	echo "> Renaming $src to $dest"
+	mv $src $dest
+done

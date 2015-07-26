@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# Toggles an OpenVPN connection from the commandline. Default: sony
+
+if [ $# == 0 ]  ; then
+  VPN="sony"
+else
+  VPN=$1
+fi
+
+LOCK_PREFIX="/tmp/vpn_active"
+LOCK_FILE="${LOCK_PREFIX}_${VPN}"
+
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+NORMAL=$(tput sgr0)
+
+col=$(tput cols)
+
+turn_on() {
+  local msg="> Turning on the '${VPN}' VPN"
+  local size=${#msg}
+  echo -n $msg
+  sudo nmcli c up id ${VPN} && touch ${LOCK_FILE}
+
+  ok_err $? $size
+}
+
+turn_off() {
+  local msg="> Turning off the '${VPN}' VPN"
+  local size=${#msg}
+  echo -n $msg
+  sudo nmcli c down id ${VPN} 2>/dev/null
+  rm -rf ${LOCK_PREFIX}*
+
+  ok_err $? $size
+}
+
+ok_err() {
+  local status=$1
+  local size=$2
+
+  if [ $status -ne 0 ]; then
+    printf '%*s%s%s' $((col-size-1)) "$RED" "[fail]" "$NORMAL"
+  else
+    printf '%*s%s%s' $((col-size-1)) "$GREEN" "[ ok ]" "$NORMAL"
+  fi
+}
+
+if [ ! -f "${LOCK_FILE}" ] ; then
+  turn_on
+else
+  turn_off
+fi
