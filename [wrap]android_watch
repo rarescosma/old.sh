@@ -1,5 +1,0 @@
-#!/bin/bash
-
-touch /tmp/qcyborg.log
-
-{ /usr/local/bin/qcyborg & /usr/local/bin/qcyborg_watch & }

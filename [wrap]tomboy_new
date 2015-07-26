@@ -1,2 +1,0 @@
-#!/bin/sh
-(killall tomboy && tomboy --new-note) || tomboy --new-note

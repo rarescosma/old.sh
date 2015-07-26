@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# Silence down a website. Run from apache root (htdocs)
-ln -s /usr/local/dev/index.html .
-ln -s /usr/local/dev/robots.txt .
-

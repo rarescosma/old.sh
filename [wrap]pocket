@@ -1,2 +1,0 @@
-#!/bin/bash
-/usr/bin/java -jar /home/karelian/.pocket/pocket_1.5.jar &
