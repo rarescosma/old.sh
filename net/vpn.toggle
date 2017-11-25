@@ -8,9 +8,6 @@ else
   VPN=$1
 fi
 
-LOCK_PREFIX="/tmp/vpn_active"
-LOCK_FILE="${LOCK_PREFIX}_${VPN}"
-
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 NORMAL=$(tput sgr0)
@@ -21,17 +18,7 @@ turn_on() {
   local msg="> Turning on the '${VPN}' VPN"
   local size=${#msg}
   echo -n $msg
-  sudo nmcli c up id ${VPN} && touch ${LOCK_FILE}
-
-  ok_err $? $size
-}
-
-turn_off() {
-  local msg="> Turning off the '${VPN}' VPN"
-  local size=${#msg}
-  echo -n $msg
-  sudo nmcli c down id ${VPN} 2>/dev/null
-  rm -rf ${LOCK_PREFIX}*
+  sudo nmcli c up id ${VPN}
 
   ok_err $? $size
 }
@@ -47,8 +34,4 @@ ok_err() {
   fi
 }
 
-if [ ! -f "${LOCK_FILE}" ] ; then
-  turn_on
-else
-  turn_off
-fi
+nmcli c status id $VPN >/dev/null 2>&1 || turn_on
