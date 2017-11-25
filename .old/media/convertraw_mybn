@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo -n $(basename -z "${1}" | md5sum | cut -d" " -f1)
+echo " ${1}"
+

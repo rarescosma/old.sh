@@ -1,0 +1,18 @@
+#!/bin/bash
+
+trap "exit" INT
+
+./server.sh &
+THEPID=$!
+echo "Server running with PID $THEPID"
+
+while :
+do
+  if fswatch -1 -x server.sh | grep Updated; then 
+    kill -9 $THEPID
+    ./server.sh &
+    THEPID=$!
+    echo "Server running with PID $THEPID"
+  fi
+done
+
