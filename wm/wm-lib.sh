@@ -4,17 +4,18 @@ SED='sed --in-place --follow-symlinks'
 function browser::launch() {
     local kind="${1}"
     local dot=$(cd -P "$(dirname $(readlink -f "${BASH_SOURCE[0]}"))" && pwd)
-    local scale=$(cat $dot/.browser-scale)
+    local scale=$(cat $dot/.${kind}-scale)
 
     exec $kind --force-device-scale-factor=$scale
 }
 
 # Sets the scale for chrome/chromium
 function browser::set_scale() {
-    local scale="${1}"
+    local kind="${1}"
+    local scale="${2}"
     local dot=$(cd -P "$(dirname $(readlink -f "${BASH_SOURCE[0]}"))" && pwd)
 
-    echo $scale > $dot/.browser-scale
+    echo $scale > $dot/.${kind}-scale
 }
 
 # Sets the keyboard up
