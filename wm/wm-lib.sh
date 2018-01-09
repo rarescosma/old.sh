@@ -1,3 +1,5 @@
+SED='sed --in-place --follow-symlinks'
+
 # Launches chrome/chromium
 function browser::launch() {
     local kind="${1}"
@@ -27,7 +29,7 @@ function dpi::sublime() {
     local font_size="${2}"
 
     sublime_config="${HOME}/.config/sublime-text-3/Packages/User/Preferences.sublime-settings"
-    sed -i -e "s/\"dpi_scale\": [^,]\+/\"dpi_scale\": $dpi_scale/g" \
+    $SED -e "s/\"dpi_scale\": [^,]\+/\"dpi_scale\": $dpi_scale/g" \
            -e "s/\"font_size\": [^,]\+/\"font_size\": $font_size/g" $sublime_config
 }
 
@@ -36,7 +38,7 @@ function dpi::terminal() {
     local font_size="${1}"
 
     xresources="${HOME}/.Xresources"
-    sed -i -e "s/Inconsolata:pixelsize=[^:]\+/Inconsolata:pixelsize=$font_size/g" $xresources
+    $SED -e "s/Consolas:pixelsize=[^:]\+/Consolas:pixelsize=$font_size/g" $xresources
     xrdb -merge $xresources
 }
 
@@ -45,7 +47,7 @@ function dpi::i3() {
     local font_size="${1}"
 
     i3_config="${HOME}/.i3/config"
-    sed -i -e "s/Sans Mono [[:digit:]]\+/Sans Mono $font_size/g" $i3_config
+    $SED -e "s/Sans Mono [[:digit:]]\+/Sans Mono $font_size/g" $i3_config
     i3-msg reload 1>/dev/null
 }
 
@@ -54,7 +56,7 @@ function dpi::gtk() {
     local font_size="${1}"
 
     gtkrc="${HOME}/.config/gtk-3.0/settings.ini"
-    sed -i -e "s/Cantarell [[:digit:]]\+/Cantarell $font_size/g" $gtkrc
+    $SED -e "s/Cantarell [[:digit:]]\+/Cantarell $font_size/g" $gtkrc
 }
 
 # Sets Idea font sizes
@@ -63,9 +65,9 @@ function dpi::idea() {
     local ui_font_size="${2}"
 
     idea_options="${HOME}/.IntelliJIdea2017.2/config/options"
-    sed -i -e "s/\"FONT_SIZE\" value=\"[[:digit:]]\+\"/\"FONT_SIZE\" value=\"$editor_font_size\"/g" \
+    $SED -e "s/\"FONT_SIZE\" value=\"[[:digit:]]\+\"/\"FONT_SIZE\" value=\"$editor_font_size\"/g" \
     $idea_options/editor.xml
-    sed -i -e "s/\"FONT_SIZE\" value=\"[[:digit:]]\+\"/\"FONT_SIZE\" value=\"$ui_font_size\"/g" \
+    $SED -e "s/\"FONT_SIZE\" value=\"[[:digit:]]\+\"/\"FONT_SIZE\" value=\"$ui_font_size\"/g" \
     $idea_options/ui.lnf.xml
 }
 
