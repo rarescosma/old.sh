@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 SED='sed --in-place --follow-symlinks'
 
 # Launches chrome/chromium
